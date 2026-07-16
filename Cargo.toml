@@ -1,0 +1,16 @@
+[package]
+name = "libpcap-rs"
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+description = "Memory-safe Rust port of the libpcap 1.10.5 classic-pcap savefile parser (header + record parsing, bounds validation), differentially certified against the upstream C build."
+repository = "https://github.com/Kaizen-3C/libpcap-rs"
+authors = ["The Regents of the University of California / the tcpdump.org contributors (original C implementation)", "Kaizen-3C intent-engine (Rust port)"]
+categories = ["parser-implementations", "network-programming"]
+keywords = ["pcap", "libpcap", "savefile", "parser", "tcpdump"]
+
+[dependencies]
+
+[[bin]]
+name = "differential_driver"
+path = "src/bin/differential_driver.rs"
