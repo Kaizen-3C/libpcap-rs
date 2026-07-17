@@ -22,3 +22,10 @@ path = "fuzz_targets/differential.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "differential_pcapng"
+path = "fuzz_targets/differential_pcapng.rs"
+test = false
+doc = false
+bench = false

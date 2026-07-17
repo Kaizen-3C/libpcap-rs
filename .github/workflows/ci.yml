@@ -42,10 +42,12 @@ jobs:
         run: cargo install cargo-fuzz
       - name: populate the pinned libpcap tarball (build.rs needs cref/_build/libpcap-1.10.5)
         run: bash scripts/regen_goldens.sh
-      - name: seed the corpus from the curated envelope
+      - name: seed the corpora from the curated envelopes
         run: python3 fuzz/seed_corpus.py
-      - name: fuzz for 60s — any crash or C/Rust divergence fails the job
+      - name: fuzz classic-pcap for 60s — any crash or C/Rust divergence fails the job
         run: cargo +nightly fuzz run differential -- -max_total_time=60 fuzz/corpus/differential
+      - name: fuzz pcapng for 60s — any crash or C/Rust divergence fails the job
+        run: cargo +nightly fuzz run differential_pcapng -- -max_total_time=60 -max_len=65536 fuzz/corpus/differential_pcapng
 
   bigendian:
     name: big-endian differential (s390x under QEMU)
