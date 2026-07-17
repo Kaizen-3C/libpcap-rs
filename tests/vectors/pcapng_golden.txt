@@ -1,0 +1,801 @@
+H 1 0 0 1 65535
+P 3 3 0 0 1a47e90b
+P 0 0 0 1000 811c9dc5
+P 200 200 0 2000 b3e4b6e5
+P 60 60 0 3000 efcbaa54
+Z 4
+.
+H 1 0 1 1 65535
+P 3 3 0 0 1a47e90b
+P 0 0 0 1000 811c9dc5
+P 200 200 0 2000 b3e4b6e5
+P 60 60 0 3000 73c6c09d
+Z 4
+.
+H 1 0 0 1 1500
+E an interface has a type 0 different from the type of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+E an interface has a type 0 different from the type of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+P 18 18 0 0 0e64b059
+Z 1
+.
+H 1 0 0 1 65535
+P 7 7 0 7 614560e2
+Z 1
+.
+H 1 0 1 1 65535
+P 18 18 0 0 0e64b059
+Z 1
+.
+H 1 0 1 1 65535
+P 7 7 0 7 614560e2
+Z 1
+.
+H 1 0 0 1 8
+P 8 20 0 0 cb225fe5
+Z 1
+.
+H 1 0 0 1 1500
+P 4 4 0 1 21547d39
+P 4 4 0 2 1e547880
+Z 2
+.
+H 1 0 0 1 1500
+P 4 4 0 1 21547d39
+E pcapng block size 469762048 > maximum 16777216
+Z 1
+.
+H 1 0 0 1 1500
+P 13 13 0 1 b4ce26ee
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 123456 789000 46454e70
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 1929012 328125 46454e70
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 1000 123456 46454e70
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 -377 456789 46454e70
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 123 456789 46454e70
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 123 456789 46454e70
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 123 456789 46454e70
+Z 1
+.
+X Interface Description Block if_tsresol option resolution 2^-72 is too high
+.
+X Interface Description Block if_tsresol option resolution 10^-100 is too high
+.
+X Interface Description Block has more than one if_tsresol option
+.
+X Interface Description Block has more than one if_tsoffset option
+.
+X Interface Description Block has if_tsresol option with length 2 != 1
+.
+X Interface Description Block has if_tsoffset option with length 3 != 8
+.
+X Interface Description Block has opt_endofopt option with length 1 != 0
+.
+X not-pcapng
+.
+X unsupported pcapng savefile version 2.0
+.
+H 1 2 0 1 1500
+P 3 3 0 1 caecbfae
+Z 1
+.
+X unsupported pcapng savefile version 1.9
+.
+X Section Header Block in pcapng dump file has invalid length 28 < _2097180_ < 1048576 (BT_SHB_INSANE_MAX)
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X the capture file has no Interface Description Blocks
+.
+X the capture file has no Interface Description Blocks
+.
+X the capture file has a packet block before any Interface Description Blocks
+.
+X the capture file has a packet block before any Interface Description Blocks
+.
+X the capture file has a packet block before any Interface Description Blocks
+.
+H 1 0 0 1 1500
+E a packet arrived on interface 5, but there's no Interface Description Block for that interface
+Z 0
+.
+H 1 0 0 1 8
+E invalid packet capture length 40, bigger than snaplen of 8
+Z 0
+.
+H 1 0 0 1 8
+E invalid packet capture length 40, bigger than snaplen of 8
+Z 0
+.
+H 1 0 0 1 1500
+P 2 2 0 1 663437af
+E an interface has a type 0 different from the type of the first interface
+Z 1
+.
+H 1 0 0 1 1500
+P 2 2 0 1 663437af
+E an interface has a snapshot length 9000 different from the snapshot length of the first interface
+Z 1
+.
+X block in pcapng dump file has a length of 21 that is not a multiple of 4
+.
+X block in pcapng dump file has a length of 4 < 12
+.
+X block total length in header and trailer don't match
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X truncated pcapng dump file; tried to read 16 bytes, only got 0
+.
+X truncated pcapng dump file; tried to read 16 bytes, only got 4
+.
+X truncated pcapng dump file; tried to read 16 bytes, only got 8
+.
+X truncated pcapng dump file; tried to read 16 bytes, only got 12
+.
+X the capture file has no Interface Description Blocks
+.
+X truncated pcapng dump file; tried to read 8 bytes, only got 4
+.
+X truncated pcapng dump file; tried to read 12 bytes, only got 0
+.
+X truncated pcapng dump file; tried to read 12 bytes, only got 4
+.
+X truncated pcapng dump file; tried to read 12 bytes, only got 8
+.
+H 1 0 0 1 1500
+Z 0
+.
+H 1 0 0 1 1500
+P 11 11 0 1 d58b3fa7
+E truncated pcapng dump file; tried to read 40 bytes, only got 32
+Z 1
+.
+H 1 0 0 1 1500
+P 11 11 0 1 d58b3fa7
+E truncated pcapng dump file; tried to read 40 bytes, only got 39
+Z 1
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X truncated pcapng dump file; tried to read 215 bytes, only got 128
+.
+X not-pcapng
+.
+X unsupported pcapng savefile version 254.0
+.
+H 1 0 0 1 1500
+P 11 11 0 1 d58b3fa7
+P 15 15 0 2 9a91ae50
+Z 2
+.
+H 1 0 0 1 1500
+P 11 11 0 1 d58b3fa7
+P 15 15 0 2 9a91ae50
+Z 2
+.
+H 1 0 0 1 1500
+P 11 11 0 1 d58b3fa7
+P 15 15 0 2 9a91ae50
+Z 2
+.
+X the capture file has a packet block before any Interface Description Blocks
+.
+X block in pcapng dump file has a length of 235 that is not a multiple of 4
+.
+H 1 0 0 254 1500
+P 11 11 0 1 d58b3fa7
+P 15 15 0 2 9a91ae50
+Z 2
+.
+H 1 0 0 1 1315
+P 11 11 0 1 d58b3fa7
+P 15 15 0 2 9a91ae50
+Z 2
+.
+X block total length in header and trailer don't match
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 128
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 128
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 128
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+P 121 121 0 0 79b90bfa
+P 27 27 0 0 66270191
+P 72 72 37193268 139846 2ef1c6e2
+P 59 59 0 0 ddbe6d9e
+P 185 185 81565419 504227 3fd6662d
+Z 5
+.
+H 1 0 0 1 128
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 128
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+P 128 128 68388905 588584 9a1f51d0
+P 124 124 78376483 724661 2ace5a05
+P 56 56 232077462 857229 b9eb5b52
+P 138 138 0 0 866d515f
+Z 4
+.
+H 1 0 1 1 128
+P 12 12 227594227 698591 0f9f4b3e
+E invalid packet capture length 136, bigger than snaplen of 128
+Z 1
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 128
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 1500
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+P 100 100 174897994 377109 553cca60
+Z 1
+.
+H 1 0 0 1 65535
+P 61 61 150937386 835229 4dcfe99c
+P 108 108 69763772 246618 50e00200
+P 133 133 27037381 847832 14a7196a
+Z 3
+.
+H 1 0 0 1 128
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 65535
+Z 0
+.
+H 1 0 1 1 128
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+P 77 77 0 0 4647bd4d
+P 151 151 213046976 240355 cb9a9f00
+P 131 131 215586568 884257 96b52721
+P 155 155 202823716 159929 e0b9003f
+Z 4
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 1500
+P 118 118 180375200 945066 c851da18
+P 12 12 70381488 746887 2df11616
+P 54 54 273720579 983354 aa18bd0a
+P 80 80 101581077 782562 d81264a6
+P 147 147 242846107 550627 441e2f44
+Z 5
+.
+H 1 0 1 1 1500
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 1500
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 65535
+P 41 41 185462521 130198 da755d2c
+P 118 118 0 0 d09011ed
+Z 2
+.
+H 1 0 1 1 1500
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+Z 0
+.
+H 1 0 0 1 65535
+P 197 197 97733802 626755 d2748a26
+P 136 136 40779441 495213 e9d6c152
+P 178 178 0 0 4f3707de
+Z 3
+.
+H 1 0 1 1 128
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 65535
+Z 0
+.
+H 1 0 1 1 1500
+P 79 79 68700402 337563 8d37db7b
+P 26 26 0 0 9c1cd4cb
+Z 2
+.
+H 1 0 1 1 1500
+E an interface has a snapshot length 65535 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+P 192 192 0 0 6fcb3dd0
+P 1 1 0 0 af0bd5bd
+P 23 23 221495906 712732 6f80861d
+P 160 160 0 0 02bcd565
+P 166 166 78723121 102114 914031c4
+P 132 132 0 0 913f330f
+Z 6
+.
+H 1 0 0 1 1500
+P 174 174 274657681 364984 890d6aa6
+P 185 185 0 0 0767106d
+Z 2
+.
+H 1 0 1 1 1500
+P 108 108 2259860 811510 acc3416d
+P 146 146 0 0 a9833943
+Z 2
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+P 57 57 31384686 674392 3cdc38e4
+P 1 1 89501485 909556 960bae62
+P 135 135 0 0 f40634c7
+P 147 147 274454444 264985 484bc700
+P 72 72 136477113 951900 d3ba07b4
+Z 5
+.
+H 1 0 0 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 1500
+P 96 96 0 0 9b0af164
+P 82 82 64086142 1805 c7e05865
+Z 2
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+Z 0
+.
+H 1 0 1 1 1500
+P 134 134 64240202 310757 9fa3fe19
+P 48 48 0 0 91ebfc75
+P 145 145 271344397 622750 734a95a4
+P 157 157 0 0 a14336d1
+Z 4
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 128
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 1500
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 128
+E an interface has a snapshot length 1500 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+P 82 82 0 0 8465c546
+P 111 111 109298811 385801 c6204816
+Z 2
+.
+H 1 0 0 1 65535
+P 95 95 263331546 667804 6cd53fe6
+P 143 143 0 0 836b72f2
+P 26 26 0 0 6951aeb4
+Z 3
+.
+H 1 0 0 1 128
+E invalid packet capture length 190, bigger than snaplen of 128
+Z 0
+.
+H 1 0 0 1 1500
+P 19 19 32580977 955047 e204ff5b
+P 115 115 0 0 d8e1878e
+P 127 127 234587636 541250 541b1dda
+P 54 54 153061242 41044 9608e72e
+P 105 105 280286959 187381 133c819c
+Z 5
+.
+H 1 0 1 1 1500
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 1500
+P 14 14 158235812 66218 89b7c07e
+Z 1
+.
+H 1 0 1 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+E an interface has a snapshot length 128 different from the snapshot length of the first interface
+Z 0
+.
+H 1 0 0 1 65535
+P 166 166 6417297 334600 f7081aa1
+P 149 149 132534389 99661 3c12d45d
+P 188 188 0 0 497a57af
+P 133 133 46211534 606910 00fab1e3
+P 164 164 65666694 774771 4c9f0162
+Z 5
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 1137598569 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 128
+E block in pcapng dump file has a length of 3232983237 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 1500
+E block in pcapng dump file has a length of 2539578751 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 128
+E block in pcapng dump file has a length of 1726748257 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 65535
+E pcapng block size 2446551512 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 273729895 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 65535
+E block in pcapng dump file has a length of 1480750943 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 1500
+E pcapng block size 3307142920 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 2826791471 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 4120537686 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 3830200658 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 279115634 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 128
+E block in pcapng dump file has a length of 2620587371 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 65535
+E block in pcapng dump file has a length of 2908423966 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 65535
+E block in pcapng dump file has a length of 2124555174 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 65535
+E pcapng block size 3596503972 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 128
+E truncated pcapng dump file; tried to read 8 bytes, only got 3
+Z 0
+.
+H 1 0 1 1 1500
+E pcapng block size 2165229136 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 3904893370 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 128
+E block in pcapng dump file has a length of 3380667554 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 1500
+E block in pcapng dump file has a length of 823320190 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E pcapng block size 4133313844 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 4291103090 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 3117719543 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E pcapng block size 2476968900 > maximum 16777216
+Z 0
+.
+H 1 0 0 1 128
+E pcapng block size 1848041888 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 4204560993 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 65535
+E pcapng block size 1414218204 > maximum 16777216
+Z 0
+.
+H 1 0 0 1 128
+E block in pcapng dump file has a length of 4057178946 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 3282173917 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 65535
+E pcapng block size 2996409492 > maximum 16777216
+Z 0
+.
+H 1 0 0 1 1500
+E pcapng block size 2327567832 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 1211317291 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 1500
+E block in pcapng dump file has a length of 1809387183 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 65535
+E truncated pcapng dump file; tried to read 8 bytes, only got 1
+Z 0
+.
+H 1 0 0 1 1500
+E block in pcapng dump file has a length of 3315090281 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 65535
+E block in pcapng dump file has a length of 303187774 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 65535
+E pcapng block size 3626236352 > maximum 16777216
+Z 0
+.
+H 1 0 0 1 128
+E block in pcapng dump file has a length of 2824325870 that is not a multiple of 4
+Z 0
+.
+H 1 0 0 1 65535
+E pcapng block size 1345385312 > maximum 16777216
+Z 0
+.
+H 1 0 0 1 128
+E block in pcapng dump file has a length of 3775476750 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 883134865 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 671034557 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 436519767 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 3710008027 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 1500
+E pcapng block size 2398651464 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 1500
+E pcapng block size 475238484 > maximum 16777216
+Z 0
+.
+H 1 0 0 1 65535
+E pcapng block size 1612494264 > maximum 16777216
+Z 0
+.
+H 1 0 1 1 1500
+E block in pcapng dump file has a length of 1031474858 that is not a multiple of 4
+Z 0
+.
+H 1 0 1 1 128
+E block in pcapng dump file has a length of 752396433 that is not a multiple of 4
+Z 0
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.
+X not-pcapng
+.

@@ -1,10 +1,17 @@
 # libpcap-rs
 
-A memory-safe Rust port of the **libpcap 1.10.5** classic-pcap *savefile parser* — the
-untrusted-input path from `src/sf-pcap.c`: `pcap_check_header` (file-header validation, byte-
-order detection, version/linktype/reserved-field checks) and `pcap_next_packet` (per-record
-parsing, timestamp scaling, caplen/len swap heuristics, and the **caplen/snapshot bounds
-checks that are libpcap's historical CVE surface**).
+A memory-safe Rust port of two **libpcap 1.10.5** savefile parsers — the untrusted-input paths
+that turn a hostile capture file into validated packet records:
+
+- **classic-pcap** (`src/sf-pcap.c`): `pcap_check_header` (file-header validation, byte-order
+  detection, version/linktype/reserved-field checks) and `pcap_next_packet` (per-record
+  parsing, timestamp scaling, caplen/len swap heuristics, and the **caplen/snapshot bounds
+  checks that are libpcap's historical CVE surface**).
+- **pcapng** (`src/sf-pcapng.c`, module [`pcapng`](src/pcapng.rs)): `pcap_ng_check_header`
+  (Section Header Block detection, byte-order/version validation, first-section Interface
+  Description Block) and `pcap_ng_next_packet` (the EPB/SPB/PB/IDB/SHB block loop, per-block
+  length/trailer sanity, per-interface timestamp-resolution scaling, and the same
+  caplen/snapshot bounds checks in the pcapng block-parser's terms).
 
 The entire crate is **`#![forbid(unsafe_code)]`** and has **zero dependencies**.
 
@@ -17,11 +24,12 @@ The entire crate is **`#![forbid(unsafe_code)]`** and has **zero dependencies**.
 
 ## Scope
 
-This is the **classic-pcap savefile reader**, not all of libpcap. In scope: the file-header
-and packet-record parser that turns untrusted `.pcap` bytes into validated packet headers +
-captured data. Out of scope (and not ported): live capture (OS syscalls, BPF), the pcapng
-format (`sf-pcapng.c`), the full DLT/linktype-to-DLT mapping table, and the encoder/dumper.
-The parser is the security-relevant subset — it's what runs first on a hostile file.
+This is the **classic-pcap and pcapng savefile readers**, not all of libpcap. In scope: the
+file-header and block/record parsers that turn untrusted `.pcap`/`.pcapng` bytes into
+validated packet headers + captured data. Out of scope (and not ported): live capture (OS
+syscalls, BPF), the full DLT/linktype-to-DLT mapping table, and the encoder/dumper (classic
+`savefile.c` write path or pcapng's block-writer). The parsers are the security-relevant
+subset — it's what runs first on a hostile file.
 
 ## Certification methodology
 
@@ -34,14 +42,19 @@ diagnostic strings on every rejection** — is byte-compared against the upstrea
 | Envelope | Cases | What it exercises | Result |
 |---|---|---|---|
 | `tests/vectors/pcap_*` | 217 | valid files across all versions (2.0–2.4, 543.0), link types, little/big-endian, and the three magic variants (standard, nanosecond, Kuznetzov-patched-header); snaplen edges (0→clamp, 1, MAXIMUM_SNAPLEN, over); caplen/len swap heuristics; **the caplen>max and caplen>snapshot bounds checks** (fired 75× across the corpus); **plus** an adversarial half — bad magic, single-byte corruption at every header offset, truncation at every field boundary, oversized declared dimensions, and pure-garbage fuzz — driving all 5 header-reject reasons and all record-error paths | **217/217 byte-identical** |
+| `tests/vectors/pcapng_*` | 226 | valid multi-block/multi-section/multi-interface files in both byte orders; EPB, SPB, and legacy PB packet blocks; IDB timestamp options (`if_tsresol` decimal/binary, `if_tsoffset`, duplicate/wrong-length/out-of-range option rejects); SHB rejects (bad byte-order magic, unsupported version, `BT_SHB_INSANE_MAX` overflow); no-IDB / packet-before-IDB rejects; interface-ID-out-of-range and **caplen>snapshot bounds checks**; second-section IDB linktype/snaplen mismatch; block-length sanity (not-multiple-of-4, too-short, header/trailer mismatch); truncation and single-byte-corruption sweeps; seeded random and pure-garbage fuzz | **226/226 (801 output lines) byte-identical** |
 
-The C reference is built by **slicing `pcap_check_header`, `grow_buffer`, and
-`pcap_next_packet` verbatim from the pinned tarball's `sf-pcap.c`** and stitching them with a
-minimal shim (the `pcap_t` fields those functions touch, plus a `tmpfile()`-backed `FILE*` so
-the upstream `fread` calls run unchanged). See `HARNESS.md`. `cargo test` replays the envelope
-through the crate's `differential_driver` and compares against the checked-in golden;
-`scripts/regen_goldens.sh` rebuilds the C reference from upstream and re-proves it (CI runs it
-every commit).
+The C references are built by **slicing the parser functions verbatim from the pinned
+tarball's `sf-pcap.c` / `sf-pcapng.c`** — `pcap_check_header`, `grow_buffer`, `pcap_next_packet`
+for classic-pcap; `read_block`, `get_from_block_data`, `get_opthdr_from_block_data`,
+`get_optvalue_from_block_data`, `process_idb_options`, `add_interface`,
+`pcap_ng_check_header`, `pcap_ng_cleanup`, `pcap_ng_next_packet` for pcapng — and stitching
+them with a minimal shim (the `pcap_t` fields those functions touch, plus a
+`tmpfile()`-backed `FILE*` so the upstream `fread` calls run unchanged). See `HARNESS.md`.
+`cargo test` replays both envelopes through the crate's `differential_driver` /
+`differential_driver_pcapng` and compares against the checked-in goldens;
+`scripts/regen_goldens.sh` rebuilds both C references from upstream and re-proves them (CI
+runs it every commit).
 
 Because the trace includes the **verbatim error-message text** (e.g. `unsupported pcap
 savefile version 2.5`, `savefile linktype reserved field not zero (0x00010000)`, `truncated
@@ -53,26 +66,34 @@ the accept/reject decision but the exact diagnostic each malformed input produce
 Certified (driven by the envelope): the complete `pcap_check_header` + `pcap_next_packet` +
 `grow_buffer` logic — magic/byte-order detection, header validation, timestamp scaling, the
 length-swap heuristics, and the caplen/snapshot bounds checks and bounded discard path.
+Likewise the complete pcapng block-parser logic — SHB/IDB/EPB/SPB/PB block dispatch, option
+parsing, per-interface timestamp-resolution tracking and scaling, and the block-length/
+caplen/snapshot bounds checks.
 
 Faithfully reduced in the C reference (documented, not silent): the shim's
 `linktype_to_dlt` is identity (upstream-faithful for the low-numbered DLTs the envelope uses)
 and `max_snaplen_for_dlt` returns `MAXIMUM_SNAPLEN` (what upstream returns for essentially all
 DLTs); `pcapint_post_process` is a no-op (it is a no-op for the classic link types the
 envelope stays within). These are scaffolding around the verbatim parser, not the parse logic.
+The pcapng module additionally does not port multi-DLT `max_blocksize` growth beyond
+`INITIAL_MAX_BLOCKSIZE` for exotic link types (the envelope stays within DLTs where upstream's
+`MAX_BLOCKSIZE_FOR_SNAPLEN` recompute is a no-op) — out of scope, not silently dropped.
 
 ## API shape
 
-A *safe-Rust* port: the parser reads from a byte buffer, returns validated `PcapPktHdr`
-records, and reports errors as Rust errors carrying the upstream diagnostic string. Function
-and field names track `sf-pcap.c` so a reader can diff side-by-side. Not ABI-compatible with C
-callers.
+A *safe-Rust* port: both parsers read from a byte buffer, return validated packet-header
+records, and report errors as Rust errors carrying the upstream diagnostic string. Function
+and field names track `sf-pcap.c` / `sf-pcapng.c` so a reader can diff side-by-side. Not
+ABI-compatible with C callers.
 
 ## Layout
 
-- `src/lib.rs` — the savefile parser
-- `src/bin/differential_driver.rs` — the certification op-script driver (mirrors `cref/_driver.c`)
-- `cref/` — the C reference harness: `_shim.h` (minimal `pcap_t` + helpers + tmpfile `FILE*`),
-  `_driver.c` (op-script driver), `assemble.py` (slices the verbatim parser from an upstream
-  `sf-pcap.c`)
-- `tests/differential.rs` + `tests/vectors/` — full envelope replay
-- `scripts/regen_goldens.sh` — download upstream, build the C reference, re-prove the differential
+- `src/lib.rs` — the classic-pcap savefile parser (crate root)
+- `src/pcapng.rs` — the pcapng block parser (`pub mod pcapng`)
+- `src/bin/differential_driver.rs` — classic-pcap certification op-script driver (mirrors `cref/_driver.c`)
+- `src/bin/differential_driver_pcapng.rs` — pcapng certification op-script driver (mirrors `cref/_driver_pcapng.c`)
+- `cref/` — the C reference harnesses: `_shim.h`/`_shim_pcapng.h` (minimal `pcap_t` + helpers +
+  tmpfile `FILE*`), `_driver.c`/`_driver_pcapng.c` (op-script drivers), `assemble.py`/
+  `assemble_pcapng.py` (slice the verbatim parsers from an upstream `sf-pcap.c`/`sf-pcapng.c`)
+- `tests/differential.rs` + `tests/vectors/` — full envelope replay, both parsers
+- `scripts/regen_goldens.sh` — download upstream, build both C references, re-prove both differentials

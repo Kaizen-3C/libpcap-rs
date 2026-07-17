@@ -5,8 +5,11 @@ How the correctness claim is produced, so it can be verified without trusting th
 ## The claim
 
 The Rust port and upstream libpcap 1.10.5, driven by the same op-script driver over the
-217-case envelope in `tests/vectors/`, produce **byte-identical stdout** — including the
-verbatim upstream diagnostic strings on every rejection.
+217-case classic-pcap envelope and the 226-case pcapng envelope in `tests/vectors/`, produce
+**byte-identical stdout** — including the verbatim upstream diagnostic strings on every
+rejection. The two parsers (`sf-pcap.c` / `sf-pcapng.c`) have independent harnesses below;
+everything from here through "What the shim faithfully reduces" describes classic-pcap — see
+"The pcapng harness" further down for what differs.
 
 ## How the C reference is built (`scripts/regen_goldens.sh`)
 
@@ -62,3 +65,35 @@ parse/validation/bounds-check logic, which is sliced unchanged.
 The input vectors are plain text (one hex `.pcap` per line). Add lines and rerun
 `scripts/regen_goldens.sh` — it rebuilds goldens from the upstream C, so the reference is
 always libpcap's code, never this port.
+
+## The pcapng harness
+
+Same methodology, `cref/assemble_pcapng.py` slices from `src/sf-pcapng.c` instead: the
+block-type structs (`block_header`/`block_trailer`/`option_header`/`section_header_block`/
+`interface_description_block`/`enhanced_packet_block`/`simple_packet_block`/`packet_block`/
+`block_cursor`), the per-interface/per-`pcap_t` private state, and nine functions —
+`read_bytes`, `read_block`, `get_from_block_data`, `get_opthdr_from_block_data`,
+`get_optvalue_from_block_data`, `process_idb_options`, `add_interface`,
+`pcap_ng_check_header`, `pcap_ng_cleanup`, `pcap_ng_next_packet` — by pinned line range against
+libpcap 1.10.5. `cref/_shim_pcapng.h` supplies the same class of scaffolding as the classic
+shim (reduced `pcap_t`, `PCAP_OPEN_OFFLINE_COMMON`, `pcapint_adjust_snapshot`,
+`linktype_to_dlt`, `max_snaplen_for_dlt`, `pcapint_fmt_errmsg_for_errno`,
+`pcapint_sf_cleanup`, `pcapint_post_process`, `SWAPLONG`/`SWAPSHORT`/`SWAPLL`) plus the same
+tmpfile-backed `FILE*`. `cref/_driver_pcapng.c` replays the caller sequence
+(`pcap_ng_check_header`, then loop `p->next_packet_op`) and prints the same trace grammar as
+the classic driver (`H`/`X`/`P`/`E`/`Z`), except `X` disambiguates "not pcapng" (magic/BOM
+mismatch, or a too-short read before either is checked — `err == 0` in upstream's own
+`*err` out-parameter) from a real parse error (`err == 1`) exactly as `pcap_ng_check_header`
+itself does — both cases already surface the right string, so the driver does not need to
+track `*err` separately. Not ported (documented, not silent): the `MAX_BLOCKSIZE_FOR_SNAPLEN`
+regrowth of `max_blocksize` after the first IDB is found — a no-op under the shim's
+`max_snaplen_for_dlt` stub since `INITIAL_MAX_BLOCKSIZE` (16 MiB) already exceeds it for every
+DLT the envelope uses, so dropping it doesn't change observable behavior here.
+
+Multi-generation-size note: `sf-pcapng.c`'s parser surface (~1,260 verbatim lines across
+structs + 9 functions) is over the pipeline's reliable single-generation ceiling
+(~600–800 output lines; see the libtiff Run I/J precedent). Unlike the multi-codec libtiff
+case, this port converged as a **single translate run** without needing a manual per-function
+split — the ladder needed all three rungs (haiku and sonnet plateaued around 355–397/226
+differ; opus converged first attempt) but produced one coherent 932-line file, not several
+modules composed after the fact.

@@ -32,28 +32,38 @@ UP="$BUILD/libpcap-1.10.5"
 echo "== assembling legacy.c from upstream sf-pcap.c (verbatim parser + shim + driver)"
 PCAP_SRC="$UP" OUT="$BUILD" python cref/assemble.py
 
-echo "== compiling C reference ($CC)"
-"$CC" -O2 -D_CRT_SECURE_NO_WARNINGS -o "$BUILD/cref_driver" "$BUILD/legacy.c"
+echo "== assembling legacy_pcapng.c from upstream sf-pcapng.c (verbatim parser + shim + driver)"
+PCAP_SRC="$UP" OUT="$BUILD" python cref/assemble_pcapng.py
 
-echo "== building Rust driver"
+echo "== compiling C references ($CC)"
+"$CC" -O2 -D_CRT_SECURE_NO_WARNINGS -o "$BUILD/cref_driver" "$BUILD/legacy.c"
+"$CC" -O2 -D_CRT_SECURE_NO_WARNINGS -o "$BUILD/cref_driver_pcapng" "$BUILD/legacy_pcapng.c"
+
+echo "== building Rust drivers"
 cargo build --release --quiet
 RUST_DRV=target/release/differential_driver
 [ -x "$RUST_DRV" ] || RUST_DRV=target/release/differential_driver.exe
+RUST_DRV_NG=target/release/differential_driver_pcapng
+[ -x "$RUST_DRV_NG" ] || RUST_DRV_NG=target/release/differential_driver_pcapng.exe
 
 fail=0
-inp=tests/vectors/pcap_inputs.txt
-gold=tests/vectors/pcap_golden.txt
-"$BUILD/cref_driver" < "$inp" | tr -d '\r' > "$BUILD/pcap_c.out"
-"$RUST_DRV"          < "$inp" | tr -d '\r' > "$BUILD/pcap_rs.out"
-tr -d '\r' < "$gold" > "$BUILD/pcap_gold.norm"
-if cmp -s "$BUILD/pcap_c.out" "$BUILD/pcap_rs.out"; then
-  echo "OK  pcap: upstream-built C == Rust ($(wc -l < "$inp") cases)"
-else
-  echo "FAIL pcap: upstream-built C != Rust"; fail=1
-fi
-if cmp -s "$BUILD/pcap_c.out" "$BUILD/pcap_gold.norm"; then
-  echo "OK  pcap: upstream-built C == checked-in golden"
-else
-  echo "FAIL pcap: upstream-built C != checked-in golden"; fail=1
-fi
+check() {
+  local name="$1" c_driver="$2" rs_driver="$3" inp="$4" gold="$5"
+  "$c_driver"  < "$inp" | tr -d '\r' > "$BUILD/${name}_c.out"
+  "$rs_driver" < "$inp" | tr -d '\r' > "$BUILD/${name}_rs.out"
+  tr -d '\r' < "$gold" > "$BUILD/${name}_gold.norm"
+  if cmp -s "$BUILD/${name}_c.out" "$BUILD/${name}_rs.out"; then
+    echo "OK  $name: upstream-built C == Rust ($(wc -l < "$inp") cases)"
+  else
+    echo "FAIL $name: upstream-built C != Rust"; fail=1
+  fi
+  if cmp -s "$BUILD/${name}_c.out" "$BUILD/${name}_gold.norm"; then
+    echo "OK  $name: upstream-built C == checked-in golden"
+  else
+    echo "FAIL $name: upstream-built C != checked-in golden"; fail=1
+  fi
+}
+
+check pcap   "$BUILD/cref_driver"        "$RUST_DRV"    tests/vectors/pcap_inputs.txt      tests/vectors/pcap_golden.txt
+check pcapng "$BUILD/cref_driver_pcapng" "$RUST_DRV_NG" tests/vectors/pcapng_inputs.txt    tests/vectors/pcapng_golden.txt
 exit $fail

@@ -5,8 +5,7 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-fn run_driver(input: &str) -> String {
-    let exe = env!("CARGO_BIN_EXE_differential_driver");
+fn run_driver(exe: &str, input: &str) -> String {
     let mut child = Command::new(exe)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -29,8 +28,25 @@ fn normalize(s: &str) -> String {
 
 #[test]
 fn pcap_envelope_matches_c_reference() {
-    let got = normalize(&run_driver(include_str!("vectors/pcap_inputs.txt")));
+    let got = normalize(&run_driver(
+        env!("CARGO_BIN_EXE_differential_driver"),
+        include_str!("vectors/pcap_inputs.txt"),
+    ));
     let want = normalize(include_str!("vectors/pcap_golden.txt"));
+    assert_envelope_matches(&got, &want);
+}
+
+#[test]
+fn pcapng_envelope_matches_c_reference() {
+    let got = normalize(&run_driver(
+        env!("CARGO_BIN_EXE_differential_driver_pcapng"),
+        include_str!("vectors/pcapng_inputs.txt"),
+    ));
+    let want = normalize(include_str!("vectors/pcapng_golden.txt"));
+    assert_envelope_matches(&got, &want);
+}
+
+fn assert_envelope_matches(got: &str, want: &str) {
     if got != want {
         let (mut gl, mut wl) = (got.lines(), want.lines());
         let mut n = 0usize;

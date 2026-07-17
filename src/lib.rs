@@ -1,14 +1,21 @@
 //! # libpcap-rs
 //!
-//! Memory-safe Rust port of the libpcap 1.10.5 classic-pcap *savefile parser* —
-//! `pcap_check_header` (file-header validation, byte-order detection, version/linktype
-//! checks) and `pcap_next_packet` (per-record parsing, timestamp scaling, caplen/len
-//! swap heuristics, and the caplen/snapshot bounds checks). Reads from a byte buffer.
+//! Memory-safe Rust port of two libpcap 1.10.5 savefile parsers:
 //!
-//! Differentially certified against the upstream C build; see `README.md`.
+//! - **classic-pcap** (this module) — `pcap_check_header` (file-header validation,
+//!   byte-order detection, version/linktype checks) and `pcap_next_packet` (per-record
+//!   parsing, timestamp scaling, caplen/len swap heuristics, and the caplen/snapshot bounds
+//!   checks). Reads from a byte buffer.
+//! - **pcapng** (see [`pcapng`]) — `pcap_ng_check_header` (SHB detection, first-section IDB)
+//!   and `pcap_ng_next_packet` (EPB/SPB/PB/IDB/SHB block loop, per-interface timestamp
+//!   scaling and the block-length/caplen bounds checks), from `src/sf-pcapng.c`.
+//!
+//! Both are differentially certified against the upstream C build; see `README.md`.
 //! The entire crate is `#![forbid(unsafe_code)]`.
 
 #![forbid(unsafe_code)]
+
+pub mod pcapng;
 
 const PCAP_VERSION_MAJOR: u16 = 2;
 const PCAP_VERSION_MINOR: u16 = 4;
