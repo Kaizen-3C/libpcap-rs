@@ -29,3 +29,25 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang
       - name: regenerate goldens from upstream and byte-compare
         run: bash scripts/regen_goldens.sh
+
+  bigendian:
+    name: big-endian differential (s390x under QEMU)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: s390x-unknown-linux-gnu
+      - name: install s390x cross-linker + qemu-user
+        run: sudo apt-get update && sudo apt-get install -y gcc-s390x-linux-gnu qemu-user-static
+      - name: cross-build the differential driver for s390x (64-bit big-endian)
+        env:
+          CARGO_TARGET_S390X_UNKNOWN_LINUX_GNU_LINKER: s390x-linux-gnu-gcc
+        run: cargo build --release --target s390x-unknown-linux-gnu --bin differential_driver
+      - name: replay the full envelope under qemu-s390x and byte-compare to the C golden
+        run: |
+          qemu-s390x-static -L /usr/s390x-linux-gnu \
+            target/s390x-unknown-linux-gnu/release/differential_driver \
+            < tests/vectors/pcap_inputs.txt | tr -d '\r' > be_out.txt
+          diff <(tr -d '\r' < tests/vectors/pcap_golden.txt) be_out.txt
+          echo "big-endian (s390x) output byte-identical to the C golden — all 217 cases"
