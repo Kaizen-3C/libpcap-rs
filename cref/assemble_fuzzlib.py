@@ -8,10 +8,13 @@ Usage:  PCAP_SRC=<unpacked libpcap-1.10.5 dir> OUT=<build dir> python cref/assem
 """
 import io
 import os
+import sys
 
 G = os.environ["PCAP_SRC"]
 OUT = os.environ.get("OUT", ".")
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from _postproc_slices import postproc_block  # noqa: E402
 
 
 def lines(path):
@@ -38,6 +41,7 @@ shim = io.open(os.path.join(HERE, "_shim.h"), encoding="utf-8").read()
 driver = io.open(os.path.join(HERE, "_fuzzlib_driver.c"), encoding="utf-8").read()
 
 out = [shim,
+       postproc_block(G),
        "/*==== libpcap 1.10.5 src/sf-pcap.c savefile parser, VERBATIM ====*/",
        "\n\n".join(verbatim),
        driver]
