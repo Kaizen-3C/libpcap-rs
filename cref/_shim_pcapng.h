@@ -48,6 +48,18 @@ typedef unsigned char u_char;
                       ((ull & 0x0000000000ff0000ULL) << 24) | \
                       ((ull & 0x000000000000ff00ULL) << 40) | \
                       ((ull & 0x00000000000000ffULL) << 56))
+/* link types handled by the post-process cluster (values verbatim from pcap/dlt.h) */
+#define DLT_LINUX_SLL          113
+#define DLT_PFLOG              117
+#define DLT_USB_LINUX          189
+#define DLT_USB_LINUX_MMAPPED  220
+#define DLT_NFLOG             239
+#define DLT_LINUX_SLL2        276
+/* big-endian 2-byte accessor: upstream extract.h's EXTRACT_BE_U_2, in portable byte form */
+static inline uint16_t EXTRACT_BE_U_2(const void *p) {
+    const uint8_t *b = (const uint8_t *)p;
+    return (uint16_t)(((uint16_t)b[0] << 8) | (uint16_t)b[1]);
+}
 
 struct pcap_pkthdr {
     struct timeval_shim { long tv_sec, tv_usec; } ts;
@@ -111,11 +123,9 @@ static void pcapint_sf_cleanup(pcap_t *p) {
     if (p->rfile) fclose(p->rfile);
 }
 
-/* pcapint_post_process byte-swaps in-packet pseudo-headers for a few exotic DLTs; it is a
-   no-op for the classic link types the envelope uses (Ethernet, raw, etc.). Stubbed no-op;
-   the envelope stays within DLTs where upstream post-processing is identity. */
-static void pcapint_post_process(int linktype, int swapped, struct pcap_pkthdr *hdr, u_char *data) {
-    (void)linktype; (void)swapped; (void)hdr; (void)data;
-}
+/* pcapint_post_process + swap_pseudo_headers + the per-DLT swap helpers are sliced VERBATIM
+   from pcap-util.c by assemble_pcapng.py and appended right after this shim (with the
+   pseudo-header structs sliced verbatim from the pcap headers), so the pcapng differential now
+   actually exercises post-processing instead of hiding it behind a no-op. See assemble_pcapng.py. */
 
 #endif
