@@ -608,20 +608,32 @@ fn finish_packet(
     let sec = (t / tsresol).wrapping_add(tsoffset as u64);
     let mut frac = t % tsresol;
 
+    // C's uint64_t arithmetic here is naturally wrapping (no UB, no trap) — `frac` can be
+    // large (tsresol comes from an attacker-controlled if_tsresol binary-exponent option, up
+    // to 1u64<<63) and these multiplies can genuinely overflow 64 bits on adversarial input.
+    // A fuzz run with debug-assertions on (cargo-fuzz always enables them) found the resulting
+    // panic within a few million executions of extended, deeper fuzzing (not the initial
+    // 15-minute runs — this needed real depth). The *shipped* release build (overflow-checks
+    // off by default) already wraps identically to C, so this was never an observable
+    // behavioral divergence, only a debug/fuzz-build robustness gap — but forbid(unsafe_code)
+    // is only as good as "never panics on adversarial input" too, and a plain user `cargo
+    // build` (no --release) would have hit this same panic on a real malicious pcapng file.
+    // wrapping_mul makes the C-faithful wraparound explicit instead of relying on the release
+    // profile's overflow-checks default.
     match scale_type {
         TstampScaleType::PassThrough => {}
         TstampScaleType::ScaleUpDec => {
-            frac *= scale_factor;
+            frac = frac.wrapping_mul(scale_factor);
         }
         TstampScaleType::ScaleUpBin => {
-            frac *= user_tsresol;
+            frac = frac.wrapping_mul(user_tsresol);
             frac /= tsresol;
         }
         TstampScaleType::ScaleDownDec => {
             frac /= scale_factor;
         }
         TstampScaleType::ScaleDownBin => {
-            frac *= user_tsresol;
+            frac = frac.wrapping_mul(user_tsresol);
             frac /= tsresol;
         }
     }
