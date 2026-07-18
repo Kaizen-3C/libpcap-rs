@@ -641,10 +641,21 @@ fn finish_packet(
     hdr.ts_sec = sec as i64;
     hdr.ts_usec = frac as i64;
 
-    let data = match get_from_block_data(pcap, cursor, hdr.caplen as usize) {
+    let mut data = match get_from_block_data(pcap, cursor, hdr.caplen as usize) {
         Some(x) => x,
         None => return Err(-1),
     };
+
+    // Tail of upstream pcap_ng_next_packet: same post-processing as the classic path
+    // (libpcap#1702). p->linktype is the section's single link type (all IDBs must agree) and
+    // p->swapped its byte-order flag; the USB fixup can adjust hdr.len.
+    crate::post_process::post_process(
+        pcap.linktype,
+        pcap.swapped,
+        hdr.caplen,
+        &mut hdr.len,
+        &mut data,
+    );
 
     Ok(data)
 }

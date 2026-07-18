@@ -16,6 +16,7 @@
 #![forbid(unsafe_code)]
 
 pub mod pcapng;
+pub mod post_process;
 
 const PCAP_VERSION_MAJOR: u16 = 2;
 const PCAP_VERSION_MINOR: u16 = 4;
@@ -358,6 +359,17 @@ pub fn pcap_next_packet(p: &mut PcapT, reader: &mut FileSim) -> NextResult {
         }
         p.buffer[0..caplen as usize].copy_from_slice(&got);
     }
+
+    // Tail of upstream pcap_next_packet: byte-swap in-packet pseudo-headers for the DLTs that
+    // need it and apply the USB isochronous original-length fixup (libpcap#1702). Identity for
+    // the classic DLTs (Ethernet, raw, ...). `len` may be adjusted by the USB fixup.
+    post_process::post_process(
+        p.linktype,
+        p.swapped,
+        caplen,
+        &mut len,
+        &mut p.buffer[0..caplen as usize],
+    );
 
     NextResult::Packet {
         caplen,
