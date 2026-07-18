@@ -41,8 +41,8 @@ diagnostic strings on every rejection** — is byte-compared against the upstrea
 
 | Envelope | Cases | What it exercises | Result |
 |---|---|---|---|
-| `tests/vectors/pcap_*` | 217 | valid files across all versions (2.0–2.4, 543.0), link types, little/big-endian, and the three magic variants (standard, nanosecond, Kuznetzov-patched-header); snaplen edges (0→clamp, 1, MAXIMUM_SNAPLEN, over); caplen/len swap heuristics; **the caplen>max and caplen>snapshot bounds checks** (fired 75× across the corpus); **plus** an adversarial half — bad magic, single-byte corruption at every header offset, truncation at every field boundary, oversized declared dimensions, and pure-garbage fuzz — driving all 5 header-reject reasons and all record-error paths | **217/217 byte-identical** |
-| `tests/vectors/pcapng_*` | 226 | valid multi-block/multi-section/multi-interface files in both byte orders; EPB, SPB, and legacy PB packet blocks; IDB timestamp options (`if_tsresol` decimal/binary, `if_tsoffset`, duplicate/wrong-length/out-of-range option rejects); SHB rejects (bad byte-order magic, unsupported version, `BT_SHB_INSANE_MAX` overflow); no-IDB / packet-before-IDB rejects; interface-ID-out-of-range and **caplen>snapshot bounds checks**; second-section IDB linktype/snaplen mismatch; block-length sanity (not-multiple-of-4, too-short, header/trailer mismatch); truncation and single-byte-corruption sweeps; seeded random and pure-garbage fuzz | **226/226 (801 output lines) byte-identical** |
+| `tests/vectors/pcap_*` | 236 | valid files across all versions (2.0–2.4, 543.0), link types, little/big-endian, and the three magic variants (standard, nanosecond, Kuznetzov-patched-header); snaplen edges (0→clamp, 1, MAXIMUM_SNAPLEN, over); caplen/len swap heuristics; **the caplen>max and caplen>snapshot bounds checks** (fired 75× across the corpus); **the `pcapint_post_process` per-DLT pseudo-header swaps + USB isochronous length fixup** (19 vectors, all swap branches); **plus** an adversarial half — bad magic, single-byte corruption at every header offset, truncation at every field boundary, oversized declared dimensions, and pure-garbage fuzz — driving all 5 header-reject reasons and all record-error paths | **236/236 byte-identical** |
+| `tests/vectors/pcapng_*` | 229 | valid multi-block/multi-section/multi-interface files in both byte orders; EPB, SPB, and legacy PB packet blocks; IDB timestamp options (`if_tsresol` decimal/binary, `if_tsoffset`, duplicate/wrong-length/out-of-range option rejects); SHB rejects (bad byte-order magic, unsupported version, `BT_SHB_INSANE_MAX` overflow); no-IDB / packet-before-IDB rejects; interface-ID-out-of-range and **caplen>snapshot bounds checks**; second-section IDB linktype/snaplen mismatch; block-length sanity (not-multiple-of-4, too-short, header/trailer mismatch); **post_process through the pcapng call site** (3 vectors); truncation and single-byte-corruption sweeps; seeded random and pure-garbage fuzz | **229/229 byte-identical** |
 
 The C references are built by **slicing the parser functions verbatim from the pinned
 tarball's `sf-pcap.c` / `sf-pcapng.c`** — `pcap_check_header`, `grow_buffer`, `pcap_next_packet`
@@ -65,7 +65,10 @@ the accept/reject decision but the exact diagnostic each malformed input produce
 
 Certified (driven by the envelope): the complete `pcap_check_header` + `pcap_next_packet` +
 `grow_buffer` logic — magic/byte-order detection, header validation, timestamp scaling, the
-length-swap heuristics, and the caplen/snapshot bounds checks and bounded discard path.
+length-swap heuristics, and the caplen/snapshot bounds checks and bounded discard path. Plus
+the complete `pcapint_post_process` tail — the per-DLT pseudo-header byte-swaps (pflog,
+SocketCAN over SLL/SLL2, USB linux/mmapped, NFLOG) and the USB isochronous original-length
+fixup — exercised by 19 classic + 3 pcapng vectors hitting every swap branch (`src/post_process.rs`).
 Likewise the complete pcapng block-parser logic — SHB/IDB/EPB/SPB/PB block dispatch, option
 parsing, per-interface timestamp-resolution tracking and scaling, and the block-length/
 caplen/snapshot bounds checks.
@@ -73,8 +76,8 @@ caplen/snapshot bounds checks.
 Faithfully reduced in the C reference (documented, not silent): the shim's
 `linktype_to_dlt` is identity (upstream-faithful for the low-numbered DLTs the envelope uses)
 and `max_snaplen_for_dlt` returns `MAXIMUM_SNAPLEN` (what upstream returns for essentially all
-DLTs); `pcapint_post_process` is a no-op (it is a no-op for the classic link types the
-envelope stays within). These are scaffolding around the verbatim parser, not the parse logic.
+DLTs). These are scaffolding around the verbatim parser, not the parse logic. (`pcapint_post_process`
+was previously a no-op stub here — a real gap raised on libpcap#1702, now closed as above.)
 The pcapng module additionally does not port multi-DLT `max_blocksize` growth beyond
 `INITIAL_MAX_BLOCKSIZE` for exotic link types (the envelope stays within DLTs where upstream's
 `MAX_BLOCKSIZE_FOR_SNAPLEN` recompute is a no-op) — out of scope, not silently dropped.

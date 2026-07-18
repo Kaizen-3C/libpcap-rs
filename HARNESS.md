@@ -5,7 +5,7 @@ How the correctness claim is produced, so it can be verified without trusting th
 ## The claim
 
 The Rust port and upstream libpcap 1.10.5, driven by the same op-script driver over the
-217-case classic-pcap envelope and the 226-case pcapng envelope in `tests/vectors/`, produce
+236-case classic-pcap envelope and the 229-case pcapng envelope in `tests/vectors/`, produce
 **byte-identical stdout** — including the verbatim upstream diagnostic strings on every
 rejection. The two parsers (`sf-pcap.c` / `sf-pcapng.c`) have independent harnesses below;
 everything from here through "What the shim faithfully reduces" describes classic-pcap — see
@@ -22,10 +22,14 @@ everything from here through "What the shim faithfully reduces" describes classi
 3. It prepends `cref/_shim.h` — the minimal `pcap_t` (only the fields those functions touch),
    the constants/macros they reference from `pcap-int.h` / `pcap/pcap.h`, small helper
    definitions (`pcapint_open_offline_common`, `pcapint_adjust_snapshot`, `linktype_to_dlt`,
-   `max_snaplen_for_dlt`, `pcapint_fmt_errmsg_for_errno`, `pcapint_sf_cleanup`,
-   `pcapint_post_process`), and nothing that alters the parse logic — and appends
-   `cref/_driver.c`, the op-script driver. **The shim is the only added code; the parser
-   bodies are verbatim upstream.**
+   `max_snaplen_for_dlt`, `pcapint_fmt_errmsg_for_errno`, `pcapint_sf_cleanup`), and nothing that
+   alters the parse logic. It then inserts the **verbatim** `pcapint_post_process` cluster —
+   `swap_pseudo_headers` and the per-DLT swap helpers (pflog, SocketCAN over SLL/SLL2, USB
+   linux/mmapped, NFLOG) plus the USB isochronous original-length fixup — sliced from
+   `pcap-util.c` and `pcap-usb-linux-common.h` (with the pseudo-header structs sliced from the
+   `pcap/*` headers and `pflog.h`); see `cref/_postproc_slices.py`. Finally it appends
+   `cref/_driver.c`, the op-script driver. **The shim is the only added code; the parser and
+   post-process bodies are verbatim upstream.**
 4. The driver backs a real `FILE*` with a `tmpfile()` (so the verbatim `fread` calls run
    unchanged), replays the exact caller sequence libpcap uses — read the 4-byte magic, call
    `pcap_check_header`, set `p->rfile`, loop `p->next_packet_op` — and prints the trace.
@@ -53,12 +57,17 @@ Every line ends with a `.` separator. Full op semantics are documented at the to
 ## What the shim faithfully reduces (documented, not silent)
 
 The three sliced functions call out to a few libpcap helpers that live in other TUs
-(`pcap-common.c`, `pcap-util.c`). The shim provides upstream-faithful behavior for the
-classic-pcap path the envelope exercises: `linktype_to_dlt` is identity (correct for the
-low-numbered DLTs used), `max_snaplen_for_dlt` returns `MAXIMUM_SNAPLEN` (upstream's value for
-essentially every DLT), and `pcapint_post_process` is a no-op (it is a no-op for the classic
-link types the envelope stays within). These surround the verbatim parser; they are not the
-parse/validation/bounds-check logic, which is sliced unchanged.
+(`pcap-common.c`, `pcap-util.c`). The shim provides upstream-faithful behavior for two of them:
+`linktype_to_dlt` is identity (correct for the low-numbered DLTs used) and `max_snaplen_for_dlt`
+returns `MAXIMUM_SNAPLEN` (upstream's value for essentially every DLT). These surround the
+verbatim parser; they are not the parse/validation/bounds-check logic, which is sliced unchanged.
+
+`pcapint_post_process` used to be a no-op stub here — the envelope stayed within DLTs where it's
+identity, so the stub was never exercised. That was a real coverage gap (raised on libpcap#1702):
+it is *not* a no-op for `DLT_PFLOG`, `DLT_LINUX_SLL`/`SLL2` (SocketCAN), `DLT_USB_LINUX`/
+`_MMAPPED`, or `DLT_NFLOG`. It is now sliced verbatim (above) and the classic envelope carries
+19 vectors (`tests/vectors/gen_postproc_vectors.py`) that reach every swap branch and the USB
+isochronous length fixup, all certified byte-identical; the Rust side is `src/post_process.rs`.
 
 ## Regenerating or extending the envelope
 
@@ -78,8 +87,10 @@ block-type structs (`block_header`/`block_trailer`/`option_header`/`section_head
 libpcap 1.10.5. `cref/_shim_pcapng.h` supplies the same class of scaffolding as the classic
 shim (reduced `pcap_t`, `PCAP_OPEN_OFFLINE_COMMON`, `pcapint_adjust_snapshot`,
 `linktype_to_dlt`, `max_snaplen_for_dlt`, `pcapint_fmt_errmsg_for_errno`,
-`pcapint_sf_cleanup`, `pcapint_post_process`, `SWAPLONG`/`SWAPSHORT`/`SWAPLL`) plus the same
-tmpfile-backed `FILE*`. `cref/_driver_pcapng.c` replays the caller sequence
+`pcapint_sf_cleanup`, `SWAPLONG`/`SWAPSHORT`/`SWAPLL`/`EXTRACT_BE_U_2`) plus the same
+tmpfile-backed `FILE*`, and the same verbatim `pcapint_post_process` cluster as the classic
+harness (`pcap_ng_next_packet` calls it too; 3 pcapng post-process vectors exercise that call
+site). `cref/_driver_pcapng.c` replays the caller sequence
 (`pcap_ng_check_header`, then loop `p->next_packet_op`) and prints the same trace grammar as
 the classic driver (`H`/`X`/`P`/`E`/`Z`), except `X` disambiguates "not pcapng" (magic/BOM
 mismatch, or a too-short read before either is checked — `err == 0` in upstream's own
