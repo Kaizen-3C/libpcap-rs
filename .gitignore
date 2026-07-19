@@ -1,3 +1,4 @@
 /target
 Cargo.lock
 /cref/_build
+cref/__pycache__/

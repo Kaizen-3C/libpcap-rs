@@ -43,7 +43,13 @@ pub enum ScaleType {
 }
 
 pub struct PcapT {
+    /// libpcap's `pcap_t.swapped`: true iff the file's byte order differs from the READING host's
+    /// (host-relative). Consumed by `post_process` and exposed to callers, matching upstream.
     pub swapped: bool,
+    /// The file's absolute byte order: true iff the file is big-endian, independent of host. Used
+    /// for the host-independent `from_le_bytes` decode corrections. On a little-endian host this
+    /// equals `swapped`; on a big-endian host it's its complement. (See libpcap#1702.)
+    pub file_is_be: bool,
     pub version_major: u16,
     pub version_minor: u16,
     pub linktype: u32,
@@ -193,8 +199,17 @@ pub fn pcap_check_header(magic: [u8; 4], reader: &mut FileSim) -> (Option<PcapT>
     }
     let buffer = vec![0u8; bufsize];
 
+    // Up to here `swapped` is the ABSOLUTE "file is big-endian" (from the host-independent
+    // `from_le_bytes` magic read), which is what the field/decode corrections above needed. But
+    // libpcap's `pcap_t.swapped` — the flag `post_process` and callers see — is HOST-RELATIVE
+    // ("file byte order ≠ reading host's"). Recover it here so the two agree on every host, not
+    // just little-endian ones (libpcap#1702). On a little-endian host this is a no-op.
+    let file_is_be = swapped;
+    let swapped = file_is_be ^ cfg!(target_endian = "big");
+
     let p = PcapT {
         swapped,
+        file_is_be,
         version_major,
         version_minor,
         linktype,
@@ -246,7 +261,8 @@ pub fn pcap_next_packet(p: &mut PcapT, reader: &mut FileSim) -> NextResult {
     let raw_len = u32::from_le_bytes([hdrbytes[12], hdrbytes[13], hdrbytes[14], hdrbytes[15]]);
 
     let (mut caplen, mut len, tv_sec, tv_usec);
-    if p.swapped {
+    if p.file_is_be {
+        // absolute flag: correct the host-independent from_le_bytes reads for a big-endian file
         caplen = swap32(raw_caplen);
         len = swap32(raw_len);
         tv_sec = swap32(raw_tv_sec as u32) as i32;

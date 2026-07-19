@@ -74,7 +74,11 @@ pub struct Pcap {
     rfile: Option<Vec<u8>>,
     rfile_pos: usize,
     priv_data: PcapNgSf,
+    /// Host-relative (libpcap semantics: section byte order ≠ reading host's); gates `post_process`.
     pub swapped: bool,
+    /// Absolute: the section is big-endian, host-independent; gates the `from_le_bytes` block-field
+    /// decode corrections. Equals `swapped` on a little-endian host (libpcap#1702).
+    pub file_is_be: bool,
     pub version_major: u16,
     pub version_minor: u16,
     pub linktype: u32,
@@ -138,7 +142,7 @@ fn read_block(pcap: &mut Pcap, cursor: &mut BlockCursor) -> i32 {
     let mut block_type = u32::from_le_bytes([bhdr[0], bhdr[1], bhdr[2], bhdr[3]]);
     let mut total_length = u32::from_le_bytes([bhdr[4], bhdr[5], bhdr[6], bhdr[7]]);
 
-    if pcap.swapped {
+    if pcap.file_is_be {
         block_type = swap_long(block_type);
         total_length = swap_long(total_length);
     }
@@ -189,7 +193,7 @@ fn read_block(pcap: &mut Pcap, cursor: &mut BlockCursor) -> i32 {
     );
     let mut btrlr_total_length = u32::from_le_bytes(btrlr_bytes);
 
-    if pcap.swapped {
+    if pcap.file_is_be {
         btrlr_total_length = swap_long(btrlr_total_length);
     }
 
@@ -226,7 +230,7 @@ fn get_opthdr_from_block_data(pcap: &mut Pcap, cursor: &mut BlockCursor) -> Opti
     let mut option_code = u16::from_le_bytes([data[0], data[1]]);
     let mut option_length = u16::from_le_bytes([data[2], data[3]]);
 
-    if pcap.swapped {
+    if pcap.file_is_be {
         option_code = swap_short(option_code);
         option_length = swap_short(option_length);
     }
@@ -342,7 +346,7 @@ fn process_idb_options(pcap: &mut Pcap, cursor: &mut BlockCursor) -> Result<(u64
                     optvalue[6],
                     optvalue[7],
                 ]);
-                if pcap.swapped {
+                if pcap.file_is_be {
                     tsoffset = swap_ll(tsoffset as u64) as i64;
                 }
             }
@@ -477,7 +481,12 @@ pub fn pcap_ng_check_header(
             ifaces_size: 0,
             ifaces: Vec::new(),
         },
-        swapped,
+        // `swapped` here is the ABSOLUTE "section is big-endian" (host-independent BOM read). Store
+        // the field as libpcap's HOST-RELATIVE flag (byte order ≠ reading host's) for post_process /
+        // callers, and keep the absolute one as `file_is_be` for the block-field decode corrections
+        // (libpcap#1702). No-op on a little-endian host.
+        swapped: swapped ^ cfg!(target_endian = "big"),
+        file_is_be: swapped,
         version_major: 0,
         version_minor: 0,
         linktype: 0,
@@ -545,7 +554,7 @@ pub fn pcap_ng_check_header(
                 let mut snaplen =
                     u32::from_le_bytes([idb_data[4], idb_data[5], idb_data[6], idb_data[7]]);
 
-                if pcap.swapped {
+                if pcap.file_is_be {
                     linktype = swap_short(linktype);
                     snaplen = swap_long(snaplen);
                 }
@@ -695,7 +704,7 @@ pub fn pcap_ng_next_packet(pcap: &mut Pcap, hdr: &mut PcapPkthdr) -> Result<Vec<
                     u32::from_le_bytes([epb_data[16], epb_data[17], epb_data[18], epb_data[19]]);
 
                 let (interface_id, caplen, len, t);
-                if pcap.swapped {
+                if pcap.file_is_be {
                     interface_id = swap_long(interface_id_raw);
                     caplen = swap_long(caplen_raw);
                     len = swap_long(len_raw);
@@ -720,7 +729,7 @@ pub fn pcap_ng_next_packet(pcap: &mut Pcap, hdr: &mut PcapPkthdr) -> Result<Vec<
 
                 let mut len =
                     u32::from_le_bytes([spb_data[0], spb_data[1], spb_data[2], spb_data[3]]);
-                if pcap.swapped {
+                if pcap.file_is_be {
                     len = swap_long(len);
                 }
 
@@ -748,7 +757,7 @@ pub fn pcap_ng_next_packet(pcap: &mut Pcap, hdr: &mut PcapPkthdr) -> Result<Vec<
                     u32::from_le_bytes([pb_data[16], pb_data[17], pb_data[18], pb_data[19]]);
 
                 let (interface_id, caplen, len, t);
-                if pcap.swapped {
+                if pcap.file_is_be {
                     interface_id = swap_short(interface_id_raw) as u32;
                     caplen = swap_long(caplen_raw);
                     len = swap_long(len_raw);
@@ -775,7 +784,7 @@ pub fn pcap_ng_next_packet(pcap: &mut Pcap, hdr: &mut PcapPkthdr) -> Result<Vec<
                 let mut snaplen =
                     u32::from_le_bytes([idb_data[4], idb_data[5], idb_data[6], idb_data[7]]);
 
-                if pcap.swapped {
+                if pcap.file_is_be {
                     linktype = swap_short(linktype);
                     snaplen = swap_long(snaplen);
                 }
@@ -810,7 +819,7 @@ pub fn pcap_ng_next_packet(pcap: &mut Pcap, hdr: &mut PcapPkthdr) -> Result<Vec<
                     u32::from_le_bytes([shb_data[0], shb_data[1], shb_data[2], shb_data[3]]);
                 let mut major_version = u16::from_le_bytes([shb_data[4], shb_data[5]]);
 
-                if pcap.swapped {
+                if pcap.file_is_be {
                     byte_order_magic = swap_long(byte_order_magic);
                     major_version = swap_short(major_version);
                 }

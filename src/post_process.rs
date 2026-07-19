@@ -9,12 +9,19 @@
 //!
 //! The C code casts the packet buffer to the pseudo-header structs and byte-swaps fields in
 //! place; `#![forbid(unsafe_code)]` can't do that cast, so every access is by the exact byte
-//! offset of the field in the upstream struct layout (checked against the C headers). A field
-//! swap is a reversal of the field's bytes — identical to the C's `SWAP*(host-order read)`
-//! net effect on the buffer regardless of host endianness — and every subsequent numeric read
-//! interprets the (now reading-host-order) bytes little-endian, matching the certification host.
-//! The differential harness observes both effects: the driver FNV-hashes the post-processed
-//! captured bytes, and prints `len` (which the USB fixup can change).
+//! offset of the field in the upstream struct layout (checked against the C headers), and a field
+//! swap is a reversal of the field's bytes — the buffer-level effect of the C's `SWAP*`.
+//!
+//! Endianness (fixed after libpcap#1702; thanks to G. Harris): the pseudo-headers are captured in
+//! the *writing* host's byte order and must be delivered in the *reading* host's byte order, so the
+//! swap is needed iff those differ — which is exactly what libpcap's host-relative `swapped` flag
+//! means. `pcap_check_header` now stores that host-relative flag (see there), so `post_process`
+//! gates on `swapped` directly. Every subsequent field read is of a value already in reading-host
+//! order, so it uses native-endian helpers (`rd_u*_host`) rather than assuming little-endian. On a
+//! little-endian host all of this reduces to the previous behaviour, so the byte-identical
+//! differential is unchanged; on a big-endian host it now matches upstream. The harness observes
+//! both effects (the driver FNV-hashes the post-processed bytes and prints `len`) and is cross-run
+//! as a verbatim-C-vs-Rust differential under qemu-s390x, so the big-endian path is exercised.
 
 // DLT values handled here (verbatim from pcap/dlt.h).
 const DLT_PFLOG: u32 = 117;
@@ -51,12 +58,16 @@ fn swap_bytes(data: &mut [u8], off: usize, n: usize) {
     }
 }
 
-fn rd_u16_le(data: &[u8], off: usize) -> u16 {
-    u16::from_le_bytes([data[off], data[off + 1]])
+/// Read a pseudo-header field that is in READING-HOST byte order at this point — either the file's
+/// byte order already matched the host, or `swap_pseudo_headers` byte-reversed the field into host
+/// order. Uses native endianness, so the value is correct on both little- and big-endian hosts; on
+/// the little-endian certification host this is byte-for-byte identical to a `from_le_bytes` read.
+fn rd_u16_host(data: &[u8], off: usize) -> u16 {
+    u16::from_ne_bytes([data[off], data[off + 1]])
 }
 
-fn rd_u32_le(data: &[u8], off: usize) -> u32 {
-    u32::from_le_bytes([data[off], data[off + 1], data[off + 2], data[off + 3]])
+fn rd_u32_host(data: &[u8], off: usize) -> u32 {
+    u32::from_ne_bytes([data[off], data[off + 1], data[off + 2], data[off + 3]])
 }
 
 /// `EXTRACT_BE_U_2`: big-endian 2-byte read (the SLL protocol field is big-endian).
@@ -257,7 +268,7 @@ fn swap_linux_usb_header(caplen: u32, data: &mut [u8], header_len_64_bytes: bool
 
         if transfer_type == URB_ISOCHRONOUS {
             // ndesc is read AFTER its own swap, matching the C.
-            let ndesc = rd_u32_le(data, 60);
+            let ndesc = rd_u32_host(data, 60);
             let mut desc_base: usize = 64;
             let mut i: u32 = 0;
             while i < ndesc {
@@ -306,7 +317,7 @@ fn swap_nflog_header(caplen: u32, length: u32, data: &mut [u8]) {
         swap_bytes(data, p + 2, 2); // tlv_type
         swap_bytes(data, p, 2); // tlv_length
 
-        let mut size = rd_u16_le(data, p) as u32; // the just-swapped tlv_length
+        let mut size = rd_u16_host(data, p) as u32; // the just-swapped tlv_length
         if !size.is_multiple_of(4) {
             size += 4 - size % 4;
         }
@@ -355,9 +366,9 @@ fn incoming_isochronous_transfer_completed_len(caplen: u32, ndesc: u32, data: &[
     let mut desc: u32 = 0;
     while desc < ndesc && bytes_left >= USB_ISODESC_LEN {
         let desc_off = 64 + (desc as usize) * 16;
-        let dlen = rd_u32_le(data, desc_off + 8); // usb_isodesc.len @8
+        let dlen = rd_u32_host(data, desc_off + 8); // usb_isodesc.len @8
         if dlen != 0 {
-            let doff = rd_u32_le(data, desc_off + 4); // usb_isodesc.offset @4
+            let doff = rd_u32_host(data, desc_off + 4); // usb_isodesc.offset @4
             let desc_end = u_int_sum(doff, dlen);
             if desc_end > pre_truncation_data_len {
                 pre_truncation_data_len = desc_end;
@@ -373,6 +384,9 @@ fn incoming_isochronous_transfer_completed_len(caplen: u32, ndesc: u32, data: &[
 /// header's fields (`len` mutable — the USB fixup can change it); `data` is the captured bytes
 /// (`data.len() == caplen`), byte-swapped in place.
 pub fn post_process(linktype: u32, swapped: bool, caplen: u32, len: &mut u32, data: &mut [u8]) {
+    // `swapped` is host-relative (`pcap_check_header` computes it as file-order ≠ reading-host
+    // order; libpcap#1702), so it directly gates the swap of the pseudo-header into reading-host
+    // order — matching upstream's `if (swapped)`.
     if swapped {
         swap_pseudo_headers(linktype, caplen, *len, data);
     }
@@ -383,7 +397,7 @@ pub fn post_process(linktype: u32, swapped: bool, caplen: u32, len: &mut u32, da
         if caplen < USB_MMAPPED_HDR_LEN {
             return; // not the full pseudo-header
         }
-        let ndesc = rd_u32_le(data, 60); // uhdr->ndesc @60 (already reading-host order)
+        let ndesc = rd_u32_host(data, 60); // uhdr->ndesc @60 (already reading-host order)
         if ndesc > USB_MAXDESC {
             return; // insane descriptor count; don't trust it
         }
@@ -394,7 +408,7 @@ pub fn post_process(linktype: u32, swapped: bool, caplen: u32, len: &mut u32, da
         let is_iso_completion = transfer_type == URB_ISOCHRONOUS
             && event_type == URB_COMPLETE
             && (endpoint_number & URB_TRANSFER_IN) != 0;
-        let urb_len = rd_u32_le(data, 32); // uhdr->urb_len @32
+        let urb_len = rd_u32_host(data, 32); // uhdr->urb_len @32
 
         if data_flag == 0 && is_iso_completion && packet_length_might_be_wrong(*len, ndesc, urb_len)
         {
