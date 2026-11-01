@@ -31,7 +31,7 @@ syscalls, BPF), the full DLT/linktype-to-DLT mapping table, and the encoder/dump
 `savefile.c` write path or pcapng's block-writer). The parsers are the security-relevant
 subset — it's what runs first on a hostile file.
 
-## Certification methodology
+## How the check works
 
 This port was not reviewed into correctness — it was **measured** into it. The upstream C
 parser and the Rust port are both driven by an identical op-script harness (one hex-encoded
@@ -58,12 +58,12 @@ runs it every commit).
 
 Because the trace includes the **verbatim error-message text** (e.g. `unsupported pcap
 savefile version 2.5`, `savefile linktype reserved field not zero (0x00010000)`, `truncated
-dump file; tried to read 16 header bytes, only got 11`), the differential certifies not just
+dump file; tried to read 16 header bytes, only got 11`), the differential checks not just
 the accept/reject decision but the exact diagnostic each malformed input produces.
 
 ## Coverage honesty
 
-Certified (driven by the envelope): the complete `pcap_check_header` + `pcap_next_packet` +
+Checked (driven by the envelope): the complete `pcap_check_header` + `pcap_next_packet` +
 `grow_buffer` logic — magic/byte-order detection, header validation, timestamp scaling, the
 length-swap heuristics, and the caplen/snapshot bounds checks and bounded discard path. Plus
 the complete `pcapint_post_process` tail — the per-DLT pseudo-header byte-swaps (pflog,
@@ -93,8 +93,8 @@ ABI-compatible with C callers.
 
 - `src/lib.rs` — the classic-pcap savefile parser (crate root)
 - `src/pcapng.rs` — the pcapng block parser (`pub mod pcapng`)
-- `src/bin/differential_driver.rs` — classic-pcap certification op-script driver (mirrors `cref/_driver.c`)
-- `src/bin/differential_driver_pcapng.rs` — pcapng certification op-script driver (mirrors `cref/_driver_pcapng.c`)
+- `src/bin/differential_driver.rs` — classic-pcap differential op-script driver (mirrors `cref/_driver.c`)
+- `src/bin/differential_driver_pcapng.rs` — pcapng differential op-script driver (mirrors `cref/_driver_pcapng.c`)
 - `cref/` — the C reference harnesses: `_shim.h`/`_shim_pcapng.h` (minimal `pcap_t` + helpers +
   tmpfile `FILE*`), `_driver.c`/`_driver_pcapng.c` (op-script drivers), `assemble.py`/
   `assemble_pcapng.py` (slice the verbatim parsers from an upstream `sf-pcap.c`/`sf-pcapng.c`)

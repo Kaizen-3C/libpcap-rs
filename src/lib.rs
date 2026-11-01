@@ -10,7 +10,7 @@
 //!   and `pcap_ng_next_packet` (EPB/SPB/PB/IDB/SHB block loop, per-interface timestamp
 //!   scaling and the block-length/caplen bounds checks), from `src/sf-pcapng.c`.
 //!
-//! Both are differentially certified against the upstream C build; see `README.md`.
+//! Both are differentially checked against the upstream C build; see `README.md`.
 //! The entire crate is `#![forbid(unsafe_code)]`.
 
 #![forbid(unsafe_code)]

@@ -61,7 +61,7 @@ fn swap_bytes(data: &mut [u8], off: usize, n: usize) {
 /// Read a pseudo-header field that is in READING-HOST byte order at this point — either the file's
 /// byte order already matched the host, or `swap_pseudo_headers` byte-reversed the field into host
 /// order. Uses native endianness, so the value is correct on both little- and big-endian hosts; on
-/// the little-endian certification host this is byte-for-byte identical to a `from_le_bytes` read.
+/// the little-endian check host this is byte-for-byte identical to a `from_le_bytes` read.
 fn rd_u16_host(data: &[u8], off: usize) -> u16 {
     u16::from_ne_bytes([data[off], data[off + 1]])
 }

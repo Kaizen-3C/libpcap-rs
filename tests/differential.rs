@@ -1,4 +1,4 @@
-//! Differential certification replay: drives the crate's op-script driver over the full
+//! Differential check replay: drives the crate's op-script driver over the full
 //! savefile-parser envelope and byte-compares against golden output produced by the upstream
 //! libpcap 1.10.5 C reference build (see README.md / HARNESS.md for provenance).
 

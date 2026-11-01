@@ -67,7 +67,7 @@ identity, so the stub was never exercised. That was a real coverage gap (raised 
 it is *not* a no-op for `DLT_PFLOG`, `DLT_LINUX_SLL`/`SLL2` (SocketCAN), `DLT_USB_LINUX`/
 `_MMAPPED`, or `DLT_NFLOG`. It is now sliced verbatim (above) and the classic envelope carries
 19 vectors (`tests/vectors/gen_postproc_vectors.py`) that reach every swap branch and the USB
-isochronous length fixup, all certified byte-identical; the Rust side is `src/post_process.rs`.
+isochronous length fixup, all checked byte-identical; the Rust side is `src/post_process.rs`.
 
 ## Regenerating or extending the envelope
 

@@ -3,7 +3,7 @@
 Coverage-guided fuzzing that generates inputs and checks the Rust port against the upstream C
 reference **automatically**, on top of the curated 217-case envelope in `tests/vectors/`
 (see `HARNESS.md`). Complements, doesn't replace, the differential test suite: the curated
-envelope is the certified claim ("byte-identical on this documented set"), this is open-ended
+envelope is the checked claim ("byte-identical on this documented set"), this is open-ended
 exploration for anything that set didn't think to cover. Scoped in
 [`../DIFFERENTIAL-FUZZING-SCOPE.md`](../DIFFERENTIAL-FUZZING-SCOPE.md).
 
@@ -55,7 +55,7 @@ cargo +nightly fuzz run differential_pcapng -- -max_total_time=60 -max_len=65536
 ## Findings
 
 **2026-07-18, ~3.2M executions into an 8-hour overnight run of `differential_pcapng`** (the
-initial 15-minute runs didn't go deep enough to hit this): a real panic in the certified port,
+initial 15-minute runs didn't go deep enough to hit this): a real panic in the checked port,
 `pcapng.rs`'s timestamp fraction scaling (`finish_packet`, the `ScaleUpDec`/`ScaleUpBin`/
 `ScaleDownBin` arms) — `frac *= scale_factor` / `frac *= user_tsresol` overflow `u64` on
 adversarial input (`tsresol` comes from an attacker-controlled binary-exponent `if_tsresol` IDB
@@ -73,8 +73,8 @@ wraparound intent explicit instead of relying on the release profile's default. 
 
 Both libpcap-rs modules built and validated, one real port bug found and fixed (above — took
 overnight-depth fuzzing, not the initial 15-minute runs, to surface). Wired into CI
-(`fuzz-smoke`, 60s per target on every commit). libogg-rs, libtiff-rs, and giflib-rs now also
-have differential fuzz targets (see their own `FUZZING.md`). Not yet wired into the pre-RFC gate
+(`fuzz-smoke`, 60s per target on every commit). The sibling ports carry differential fuzz
+targets too (see each one's own `FUZZING.md`). Not yet wired into the pre-RFC gate
 (see "Process integration" in the scope doc for what that requires).
 
 - **`differential`** (classic-pcap): all 217 curated seeds replay clean. A 15-minute run:

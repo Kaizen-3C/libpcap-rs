@@ -1,7 +1,7 @@
 //! pcapng block-parser: `pcap_ng_check_header` (SHB detection + first-section IDB) and
 //! `pcap_ng_next_packet` (EPB/SPB/PB/IDB/SHB block loop, per-interface timestamp scaling).
 //! Ported verbatim in control flow from libpcap 1.10.5 `src/sf-pcapng.c`; differentially
-//! certified against the upstream C build (see `../HARNESS.md` and `../README.md`).
+//! checked against the upstream C build (see `../HARNESS.md` and `../README.md`).
 
 const PCAP_ERRBUF_SIZE: usize = 256;
 const MAXIMUM_SNAPLEN: u32 = 262144;
