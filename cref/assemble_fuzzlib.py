@@ -2,7 +2,7 @@
 upstream libpcap 1.10.5 src/sf-pcap.c (identical slice to assemble.py) + an in-process callable
 wrapper (_fuzzlib_driver.c) instead of the op-script main() in _driver.c. Used by the
 differential-fuzz build (fuzz/build.rs) so the fuzz oracle is built from the same verbatim slice
-as the certified `differential_driver`.
+as the checked `differential_driver`.
 
 Usage:  PCAP_SRC=<unpacked libpcap-1.10.5 dir> OUT=<build dir> python cref/assemble_fuzzlib.py
 """
